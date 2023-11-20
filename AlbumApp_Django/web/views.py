@@ -2,13 +2,13 @@ from django.core import exceptions
 from django.shortcuts import render, redirect
 
 from AlbumApp_Django.web.forms import ProfileCreateForm
-from AlbumApp_Django.web.models import Profile
+from AlbumApp_Django.web.models import Profile, Album
 
 
 def get_profile():
     try:
         return Profile.objects.get()
-    except exceptions.ObjectDoesNotExist:
+    except Profile.DoesNotExist:
         return None
 
 
@@ -17,8 +17,14 @@ def index(request):
 
     if profile is None:
         return redirect('add profile')
+    context = {
+        'albums':Album.objects.all(),
 
-    return render(request, 'core/home-with-profile.html')
+    }
+
+    return render(request,
+                  'core/home-with-profile.html',
+                  context)
 
 
 def details_album(request, pk):
@@ -38,6 +44,8 @@ def delete_album(request, pk):
 
 
 def add_profile(request):
+    if get_profile() is not None:
+        return redirect('index')
     if request.method == 'GET':
         form = ProfileCreateForm()
     else:
