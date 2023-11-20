@@ -1,4 +1,5 @@
 {% extends 'base.html'%}
+{% load static %}
 {% block content %}
 
 <!-- Catalog with Albums-->
@@ -45,7 +46,7 @@
 
     <!-- Third Card-Box in catalog -->
     <div class="card-box">
-        <img src="/staticfiles/images/Lorde.jpg">
+        <img src="{% static 'images/Lorde.jpg' %}">
         <div>
             <div class="text-center">
                 <p class="name">Name: Melodrama</p>

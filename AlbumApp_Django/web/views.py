@@ -1,8 +1,23 @@
-from django.shortcuts import render
+from django.core import exceptions
+from django.shortcuts import render, redirect
+
+from AlbumApp_Django.web.forms import ProfileCreateForm
+from AlbumApp_Django.web.models import Profile
 
 
-# Create your views here.
+def get_profile():
+    try:
+        return Profile.objects.get()
+    except exceptions.ObjectDoesNotExist:
+        return None
+
+
 def index(request):
+    profile = get_profile()
+
+    if profile is None:
+        return redirect('add profile')
+
     return render(request, 'core/home-with-profile.html')
 
 
@@ -20,6 +35,23 @@ def edit_album(request, pk):
 
 def delete_album(request, pk):
     return render(request, 'albums/delete-album.html')
+
+
+def add_profile(request):
+    if request.method == 'GET':
+        form = ProfileCreateForm()
+    else:
+        form = ProfileCreateForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('index')
+
+    context = {
+        'form': form,
+    }
+    return render(request,
+                  'core/home-no-profile.html',
+                  context)
 
 
 def details_profile(request):

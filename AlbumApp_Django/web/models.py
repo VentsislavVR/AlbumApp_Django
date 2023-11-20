@@ -14,7 +14,7 @@ class Profile(models.Model):
         max_length=MAX_LEN_USERNAME,
         validators=(
             MinLengthValidator(MIN_LEN_USERNAME),
-            # validate_string_alphanumeric,
+            validate_string_alphanumeric,
         ),
     )
 
