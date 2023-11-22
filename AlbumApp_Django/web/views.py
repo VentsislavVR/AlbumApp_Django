@@ -1,7 +1,7 @@
 from django.core import exceptions
 from django.shortcuts import render, redirect
 
-from AlbumApp_Django.web.forms import ProfileCreateForm
+from AlbumApp_Django.web.forms import ProfileCreateForm, AlbumCreateForm, AlbumEditForm, AlbumDeleteForm
 from AlbumApp_Django.web.models import Profile, Album
 
 
@@ -28,19 +28,82 @@ def index(request):
 
 
 def details_album(request, pk):
-    return render(request, 'albums/album-details.html')
+    album = (Album.objects.filter(pk=pk)
+             .get())
+
+    context = {
+        'album': album,
+    }
+    return render(
+        request,
+        'albums/album-details.html',
+        context,
+    )
 
 
 def add_album(request):
-    return render(request, 'albums/add-album.html')
+    if request.method == 'GET':
+        form = AlbumCreateForm()
+    else:
+        form = AlbumCreateForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('index')
+    context = {
+        'form': form
+    }
+
+    return render(
+        request,
+        'albums/add-album.html',
+    context,
+    )
 
 
 def edit_album(request, pk):
-    return render(request, 'albums/edit-album.html')
+    album = Album.objects.filter(pk=pk).get()
+
+    if request.method == 'GET':
+        form = AlbumEditForm(instance=album)
+    else:
+        form = AlbumEditForm(request.POST,instance=album)
+        if form.is_valid():
+
+            form.save()
+            return redirect('index')
+    context = {
+        'form': form,
+        'album': album,
+
+    }
+    return render(
+        request,
+        'albums/edit-album.html',
+        context,
+    )
 
 
 def delete_album(request, pk):
-    return render(request, 'albums/delete-album.html')
+    album = Album.objects.filter(pk=pk).get()
+
+    if request.method == 'GET':
+        form = AlbumDeleteForm(instance=album)
+    else:
+        # Album.objects.filter(pk=pk).delete() # not the way / do it in the form
+        form = AlbumDeleteForm(request.POST,instance=album)
+        if form.is_valid():
+            form.save()
+            return redirect('index')
+
+    context ={
+        'album': album,
+        'form': form,
+    }
+    return render(
+        request,
+        'albums/delete-album.html',
+    context,
+    )
 
 
 def add_profile(request):

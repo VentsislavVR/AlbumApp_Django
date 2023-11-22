@@ -58,6 +58,7 @@ class Album(models.Model):
         max_length=MAX_LEN_NAME,
         null=False,
         blank=False,
+        verbose_name='Album Name',
     )
     artist = models.CharField(
         null=False,
@@ -77,6 +78,7 @@ class Album(models.Model):
     image = models.URLField(
         null=False,
         blank=False,
+        verbose_name= 'Image URL',
     )
     price = models.FloatField(
         null=False,
@@ -85,3 +87,5 @@ class Album(models.Model):
             MinValueValidator(0.0),
         )
     )
+    class Meta:
+        ordering = ('pk',)
