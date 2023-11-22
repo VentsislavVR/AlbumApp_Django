@@ -1,7 +1,8 @@
 from django.core import exceptions
 from django.shortcuts import render, redirect
 
-from AlbumApp_Django.web.forms import ProfileCreateForm, AlbumCreateForm, AlbumEditForm, AlbumDeleteForm
+from AlbumApp_Django.web.forms import ProfileCreateForm, AlbumCreateForm, AlbumEditForm, AlbumDeleteForm, \
+    ProfileDeleteForm
 from AlbumApp_Django.web.models import Profile, Album
 
 
@@ -16,7 +17,7 @@ def index(request):
     profile = get_profile()
 
     if profile is None:
-        return redirect('add profile')
+        return add_profile(request)
     context = {
         'albums':Album.objects.all(),
 
@@ -50,7 +51,8 @@ def add_album(request):
             form.save()
             return redirect('index')
     context = {
-        'form': form
+        'form': form,
+
     }
 
     return render(
@@ -119,6 +121,7 @@ def add_profile(request):
 
     context = {
         'form': form,
+        'hide_nav_links': True
     }
     return render(request,
                   'core/home-no-profile.html',
@@ -126,8 +129,34 @@ def add_profile(request):
 
 
 def details_profile(request):
-    return render(request, 'profiles/profile-details.html')
+    profile = get_profile()
+    albums_count = Album.objects.count()
+
+    context = {
+        'profile': profile,
+        'albums_count': albums_count,
+    }
+
+    return render(
+        request,
+        'profiles/profile-details.html',
+        context
+    )
+
 
 
 def delete_profile(request):
-    return render(request, 'profiles/profile-delete.html')
+    profile = get_profile()
+
+    if request.method == 'GET':
+        form = ProfileDeleteForm(instance=profile)
+    else:
+        form = ProfileDeleteForm(request.POST,instance=profile)
+        if form.is_valid():
+            form.save()
+            return redirect('index')
+    context = {'form': form}
+    return render(request,
+                  'profiles/profile-delete.html',
+                  context
+                  )
