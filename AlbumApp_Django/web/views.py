@@ -1,162 +1,66 @@
 from django.core import exceptions
+from django.core.paginator import Paginator
+
 from django.shortcuts import render, redirect
+from django.urls import reverse, reverse_lazy
 
-from AlbumApp_Django.web.forms import ProfileCreateForm, AlbumCreateForm, AlbumEditForm, AlbumDeleteForm, \
-    ProfileDeleteForm
+from AlbumApp_Django.web.forms import ProfileCreateForm, ProfileDeleteForm
 from AlbumApp_Django.web.models import Profile, Album
+from django.views import generic as views
 
 
-def get_profile():
-    try:
-        return Profile.objects.get()
-    except Profile.DoesNotExist:
-        return None
+class IndexView(views.CreateView):
+    template_name = 'core/home-no-profile.html'  # Default template for the index view
+    model = Profile
+    form_class = ProfileCreateForm
 
+    def get_template_names(self):
+        # Check if any profiles exist
+        if Profile.objects.exists():
+            # If profiles exist, switch to the template with profile
+            return ['core/home-with-profile.html']
+        else:
+            # If no profiles exist, use the default template
+            return [self.template_name]
 
-def index(request):
-    profile = get_profile()
+    def get_success_url(self):
+        return reverse('index')
 
-    if profile is None:
-        return add_profile(request)
-    context = {
-        'albums':Album.objects.all(),
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['form'] = ProfileCreateForm()
+        context['profile'] = Profile.objects.first()
 
-    }
+        # Paginate the queryset of albums
+        albums_queryset = Album.objects.all()
+        paginator = Paginator(albums_queryset, per_page=1)  # Change per_page as needed
+        page_number = self.request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
 
-    return render(request,
-                  'core/home-with-profile.html',
-                  context)
+        context['albums'] = page_obj  # Pass the paginated queryset to the context
 
-
-def details_album(request, pk):
-    album = (Album.objects.filter(pk=pk)
-             .get())
-
-    context = {
-        'album': album,
-    }
-    return render(
-        request,
-        'albums/album-details.html',
-        context,
-    )
-
-
-def add_album(request):
-    if request.method == 'GET':
-        form = AlbumCreateForm()
-    else:
-        form = AlbumCreateForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('index')
-    context = {
-        'form': form,
-
-    }
-
-    return render(
-        request,
-        'albums/add-album.html',
-    context,
-    )
-
-
-def edit_album(request, pk):
-    album = Album.objects.filter(pk=pk).get()
-
-    if request.method == 'GET':
-        form = AlbumEditForm(instance=album)
-    else:
-        form = AlbumEditForm(request.POST,instance=album)
-        if form.is_valid():
-
-            form.save()
-            return redirect('index')
-    context = {
-        'form': form,
-        'album': album,
-
-    }
-    return render(
-        request,
-        'albums/edit-album.html',
-        context,
-    )
-
-
-def delete_album(request, pk):
-    album = Album.objects.filter(pk=pk).get()
-
-    if request.method == 'GET':
-        form = AlbumDeleteForm(instance=album)
-    else:
-        # Album.objects.filter(pk=pk).delete() # not the way / do it in the form
-        form = AlbumDeleteForm(request.POST,instance=album)
-        if form.is_valid():
-            form.save()
-            return redirect('index')
-
-    context ={
-        'album': album,
-        'form': form,
-    }
-    return render(
-        request,
-        'albums/delete-album.html',
-    context,
-    )
-
-
-def add_profile(request):
-    if get_profile() is not None:
-        return redirect('index')
-    if request.method == 'GET':
-        form = ProfileCreateForm()
-    else:
-        form = ProfileCreateForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('index')
-
-    context = {
-        'form': form,
-        'hide_nav_links': True
-    }
-    return render(request,
-                  'core/home-no-profile.html',
-                  context)
-
-
-def details_profile(request):
-    profile = get_profile()
-    albums_count = Album.objects.count()
-
-    context = {
-        'profile': profile,
-        'albums_count': albums_count,
-    }
-
-    return render(
-        request,
-        'profiles/profile-details.html',
-        context
-    )
+        return context
 
 
 
-def delete_profile(request):
-    profile = get_profile()
+class ProfileDetailsView(views.DetailView):
+    model = Profile
+    template_name = 'profiles/profile-details.html'
 
-    if request.method == 'GET':
-        form = ProfileDeleteForm(instance=profile)
-    else:
-        form = ProfileDeleteForm(request.POST,instance=profile)
-        if form.is_valid():
-            form.save()
-            return redirect('index')
-    context = {'form': form}
-    return render(request,
-                  'profiles/profile-delete.html',
-                  context
-                  )
+    def get_object(self, queryset=None):
+        profile =Profile.objects.first()
+        return profile
+
+class DeleteProfileView(views.DeleteView):
+    model = Profile
+    template_name = 'profiles/profile-delete.html'
+    success_url = reverse_lazy('index')
+    def get_object(self, queryset=None):
+        profile =Profile.objects.first()
+        return profile
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['form'] = ProfileDeleteForm()
+        return context
+

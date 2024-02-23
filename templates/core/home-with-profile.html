@@ -1,34 +1,44 @@
-{% extends 'base.html'%}
+{% extends 'base.html' %}
 {% load static %}
 {% block content %}
 
-<!-- Catalog with Albums-->
-<section id="catalogPage">
+    <!-- Catalog with Albums-->
+    <section id="catalogPage">
 
-    {% if albums %}
-    <!-- If albums in catalog -->
-    <h1>All Albums</h1>
-        {% for album in albums %}
-    <!-- First Card-Box in catalog -->
-    <div class="card-box">
-        <img src="{{ album.image }}" alt="Cover Image">
-        <div>
-            <div class="text-center">
-                <p class="name">Name: {{album.album_name}}</p>
-                <p class="artist">Artist: {{ album.artist}}</p>
-                <p class="genre">Genre: {{ album.genre }}</p>
-                <p class="price">Price: ${{ album.price|floatformat:2 }}</p>
-            </div>
-            <div class="btn-group">
-                <a href="{% url 'details album' pk=album.pk %}">Details</a>
-            </div>
-        </div>
-    </div>
-    <!-- End First Card-Box in catalog -->
+        {% if albums %}
+            <!-- If albums in catalog -->
+            <h1>All Albums</h1>
+            {% for album in albums %}
+                <!-- First Card-Box in catalog -->
+                <div class="card-box">
+                    <img src="{{ album.image }}" alt="Cover Image">
+                    <div>
+                        <div class="text-center">
+                            <p class="name">Name: {{ album.album_name }}</p>
+                            <p class="artist">Artist: {{ album.artist }}</p>
+                            <p class="genre">Genre: {{ album.genre }}</p>
+                            <p class="price">Price: ${{ album.price|floatformat:2 }}</p>
+                        </div>
+                        <div class="btn-group">
+                            <a href="{% url 'details album' pk=album.pk %}">Details</a>
+                        </div>
+                    </div>
+                </div>
+                <!-- End First Card-Box in catalog -->
 
-    {% endfor %}
-    {% else %}
-        <p>No Albums in Catalog!</p>
-    {% endif %}
-</section>
+            {% endfor %}
+            <div class="pagination">
+                {% if albums.has_previous %}
+                    <a href="?page={{ albums.previous_page_number }}">Previous</a>
+                {% endif %}
+                <span class="current">Page {{ albums.number }} of {{ albums.paginator.num_pages }}</span>
+                {% if albums.has_next %}
+                    <a href="?page={{ albums.next_page_number }}">Next</a>
+                {% endif %}
+            </div>
+        {% else %}
+            <p>No Albums in Catalog!</p>
+        {% endif %}
+
+    </section>
 {% endblock %}
